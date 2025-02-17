@@ -22,9 +22,9 @@ class Balance:
 		return str({'Free': self.Free, 'Reserved': self.Reserved})
 
 class Wallet:
-	def __init__(self, balance):
-		self.LocalFree = balance
-		self.ForeignFree = 0
+	def __init__(self, localBalance, foreignBalance):
+		self.LocalFree = localBalance
+		self.ForeignFree = foreignBalance
 		self.LocalPending= []
 		self.ForeignPending= []
 
