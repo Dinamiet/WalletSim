@@ -22,9 +22,10 @@ class Balance:
 		return str({'Free': self.Free, 'Reserved': self.Reserved})
 
 class Wallet:
-	def __init__(self, localBalance, foreignBalance):
+	def __init__(self, localBalance, foreignBalance, fees):
 		self.LocalFree = localBalance
 		self.ForeignFree = foreignBalance
+		self.Fees = fees
 		self.LocalPending= []
 		self.ForeignPending= []
 
@@ -48,12 +49,14 @@ class Wallet:
 		for order in self.ForeignPending:
 			if currentPrice >= order.Price:
 				self.ForeignPending.remove(order)
-				self.LocalFree += order.Amount * order.Price
+				fee = order.Amount * self.Fees/100.0
+				self.LocalFree += (order.Amount-fee) * order.Price
 
 		for order in self.LocalPending:
 			if currentPrice <= order.Price:
 				self.LocalPending.remove(order)
-				self.ForeignFree += order.Amount
+				fee = order.Amount * self.Fees/100.0
+				self.ForeignFree += order.Amount - fee
 
 	def	GetPendingOrders(self):
 		return self.LocalPending + self.ForeignPending
