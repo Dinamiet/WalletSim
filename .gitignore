@@ -1,0 +1,5 @@
+# Build directory
+build/
+
+# External libraries
+lib/**/
