@@ -8,8 +8,7 @@ typedef struct _Wallet_
 	float        LocalFree;
 	float        ForeignFree;
 	float        Fees;
-	BufferedList LocalPending;
-	BufferedList ForeignPending;
+	BufferedList Pending;
 } Wallet;
 
 typedef enum _OrderType_
@@ -26,13 +25,19 @@ typedef struct _Order_
 	float     Amount;
 } Order;
 
-void Wallet_Init(Wallet* wallet, Order* localpendingList, Order* foreignPendingList);
-void Wallet_SetFees(Wallet* wallet, float fees);
-void Wallet_AddLocal(Wallet* wallet, float amount);
-void Wallet_AddForeign(Wallet* wallet, float amount);
-bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price);
-void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
-void Wallet_GetPendingOrders(Wallet* wallet);
-void Wallet_GetBalance(Wallet* wallet);
+typedef struct _Balance_
+{
+	float Local;
+	float Foreign;
+} Balance;
+
+void    Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength);
+void    Wallet_SetFees(Wallet* wallet, float fees);
+void    Wallet_AddLocal(Wallet* wallet, float amount);
+void    Wallet_AddForeign(Wallet* wallet, float amount);
+bool    Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price);
+void    Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
+Order*  Wallet_GetPendingOrders(Wallet* wallet);
+Balance Wallet_GetBalance(Wallet* wallet);
 
 #endif
