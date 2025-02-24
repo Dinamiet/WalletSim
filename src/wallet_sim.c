@@ -62,9 +62,39 @@ bool       Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float
 	return false;
 }
 
-void       Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
+void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 {
-	// TODO: Execute orders
+	Order* order      = BufferedList_First(&wallet->Pending);
+	Order* lastOrder  = BufferedList_Last(&wallet->Pending);
+	bool   allChecked = false;
+
+	while (!allChecked && order)
+	{
+		Order* executed = NULL;
+		float  fee      = order->Amount * (wallet->Fees / 100.0f);
+		switch (order->Type)
+		{
+			case WALLET_SELL:
+				if (currentPrice >= order->Price)
+				{
+					executed = order;
+					wallet->LocalFree += (order->Amount - fee) * order->Price;
+				}
+				break;
+
+			case WALLET_BUY:
+				if (currentPrice <= order->Price)
+				{
+					executed = order;
+					wallet->ForeignFree += (order->Amount - fee);
+				}
+				break;
+		}
+
+		allChecked = order == lastOrder;
+		order      = BufferedList_Next(order);
+		BufferedList_Remove(&wallet->Pending, executed);
+	}
 }
 
 Order* Wallet_GetPendingOrders(Wallet* wallet)
