@@ -30,6 +30,8 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 				newOrder->Type   = type;
 				newOrder->Price  = price;
 
+				wallet->ForeignFree -= amount;
+
 				return true;
 			}
 			break;
@@ -44,6 +46,8 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 				newOrder->Amount = amount;
 				newOrder->Type   = type;
 				newOrder->Price  = price;
+
+				wallet->LocalFree -= amount * price;
 
 				return true;
 			}
@@ -108,6 +112,8 @@ float Wallet_GetPendingValue(Wallet* wallet)
 	{
 		do {
 			pendingValue += order->Price * order->Amount;
+
+			order = BufferedList_Next(order);
 		} while (order != Wallet_GetPendingOrders(wallet));
 	}
 
