@@ -46,17 +46,25 @@ class Wallet:
 
 
 	def ExecuteOrders(self, currentPrice):
+		toRemove = []
 		for order in self.ForeignPending:
 			if currentPrice >= order.Price:
-				self.ForeignPending.remove(order)
+				toRemove.append(order)
 				fee = order.Amount * self.Fees/100.0
 				self.LocalFree += (order.Amount-fee) * order.Price
 
+		for rm in toRemove:
+			self.ForeignPending.remove(rm)
+
+		toRemove = []
 		for order in self.LocalPending:
 			if currentPrice <= order.Price:
-				self.LocalPending.remove(order)
+				toRemove.append(order)
 				fee = order.Amount * self.Fees/100.0
 				self.ForeignFree += order.Amount - fee
+
+		for rm in toRemove:
+			self.LocalPending.remove(rm)
 
 	def	GetPendingOrders(self):
 		return self.LocalPending + self.ForeignPending
