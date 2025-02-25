@@ -99,3 +99,17 @@ float Wallet_GetForeignFree(Wallet* wallet)
 {
 	return wallet->ForeignFree;
 }
+
+float Wallet_GetPendingValue(Wallet* wallet)
+{
+	float  pendingValue = 0.0f;
+	Order* order        = Wallet_GetPendingOrders(&wallet);
+	if (order)
+	{
+		do {
+			pendingValue += order->Price * order->Amount;
+		} while (order != Wallet_GetPendingOrders(&wallet));
+	}
+
+	return pendingValue;
+}
