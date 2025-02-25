@@ -90,27 +90,12 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 
 Order* Wallet_GetPendingOrders(Wallet* wallet) { return BufferedList_First(&wallet->Pending); }
 
-Balance Wallet_GetBalance(Wallet* wallet)
+float Wallet_GetLocalFree(Wallet* wallet)
 {
-	Balance balance = {0};
+	return wallet->LocalFree;
+}
 
-	Order* order = BufferedList_First(&wallet->Pending);
-	if (!order)
-		return balance;
-
-	do {
-		switch (order->Type)
-		{
-			case WALLET_SELL:
-				balance.Local += order->Amount * order->Price;
-				break;
-
-			case WALLET_BUY:
-				balance.Foreign += order->Amount;
-				break;
-		}
-		order = BufferedList_Next(order);
-	} while (order != BufferedList_First(&wallet->Pending));
-
-	return balance;
+float Wallet_GetForeignFree(Wallet* wallet)
+{
+	return wallet->ForeignFree;
 }
