@@ -15,6 +15,25 @@ void Wallet_AddLocal(Wallet* wallet, float amount) { wallet->LocalFree += amount
 
 void Wallet_AddForeign(Wallet* wallet, float amount) { wallet->ForeignFree += amount; }
 
+void Wallet_CancleOrder(Wallet* wallet, Order* order)
+{
+	if (!order)
+		return;
+
+	switch (order->Type)
+	{
+		case WALLET_SELL:
+			wallet->ForeignFree += order->Amount;
+			break;
+
+		case WALLET_BUY:
+			wallet->LocalFree += order->Amount * order->Price;
+			break;
+	}
+
+	BufferedList_Remove(&wallet->Pending, order);
+}
+
 bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price)
 {
 	switch (type)

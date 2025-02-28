@@ -29,6 +29,7 @@ void   Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength);
 void   Wallet_SetFees(Wallet* wallet, float fees);
 void   Wallet_AddLocal(Wallet* wallet, float amount);
 void   Wallet_AddForeign(Wallet* wallet, float amount);
+void   Wallet_CancleOrder(Wallet* wallet, Order* order);
 bool   Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price);
 void   Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
 Order* Wallet_GetPendingOrders(Wallet* wallet);
