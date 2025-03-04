@@ -9,6 +9,9 @@ typedef struct _Wallet_
 	float        ForeignFree;
 	float        Fees;
 	BufferedList Pending;
+	float        RealizedProfits;
+	float        PendingProfits;
+	float        TotalCapital;
 } Wallet;
 
 typedef enum _OrderType_
@@ -36,5 +39,9 @@ Order* Wallet_GetPendingOrders(Wallet* wallet);
 float  Wallet_GetLocalFree(Wallet* wallet);
 float  Wallet_GetForeignFree(Wallet* wallet);
 float  Wallet_GetPendingValue(Wallet* wallet);
+float  Wallet_RealizedProfit(Wallet* wallet);
+float  Wallet_PendingProfit(Wallet* wallet);
+float  Wallet_TotalCapitalUsed(Wallet* wallet);
+float  Wallet_Efficiency(Wallet* wallet);
 
 #endif
