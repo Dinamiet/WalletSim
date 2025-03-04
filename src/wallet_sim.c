@@ -5,6 +5,9 @@ void Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength)
 	wallet->LocalFree   = 0.0f;
 	wallet->ForeignFree = 0.0f;
 	wallet->Fees        = 0.0f;
+	wallet->RealizedProfits = 0.0f;
+	wallet->PendingProfits  = 0.0f;
+	wallet->TotalCapital    = 0.0f;
 
 	BufferedList_Init(&wallet->Pending, pendingOrders, sizeof(*pendingOrders), listLength);
 }
@@ -62,7 +65,7 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 			break;
 
 		case WALLET_BUY:
-			if (wallet->LocalFree > (cost))
+			if (wallet->LocalFree > cost)
 			{
 				Order* newOrder = BufferedList_AddEnd(&wallet->Pending);
 				if (!newOrder)
