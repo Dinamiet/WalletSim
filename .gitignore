@@ -1,1 +1,5 @@
-__pycache__
+# Build directory
+build/
+
+# External libraries
+lib/**/
