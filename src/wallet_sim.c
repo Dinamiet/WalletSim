@@ -106,6 +106,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 					executed = order;
 					wallet->LocalFree += received;
 					wallet->RealizedProfits += received;
+					wallet->PendingProfits -= received;
 				}
 				break;
 
@@ -116,6 +117,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 					executed = order;
 					wallet->ForeignFree += received;
 					wallet->RealizedProfits -= received * order->Price;
+					wallet->PendingProfits += received * order->Price;
 				}
 				break;
 		}
