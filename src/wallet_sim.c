@@ -5,6 +5,9 @@ void Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength)
 	wallet->LocalFree   = 0.0f;
 	wallet->ForeignFree = 0.0f;
 	wallet->Fees        = 0.0f;
+	wallet->RealizedProfits = 0.0f;
+	wallet->PendingProfits  = 0.0f;
+	wallet->TotalCapital    = 0.0f;
 
 	BufferedList_Init(&wallet->Pending, pendingOrders, sizeof(*pendingOrders), listLength);
 }
@@ -17,6 +20,7 @@ void Wallet_AddForeign(Wallet* wallet, float amount) { wallet->ForeignFree += am
 
 void Wallet_CancleOrder(Wallet* wallet, Order* order)
 {
+	float cost = order->Amount * order->Price;
 	if (!order)
 		return;
 
@@ -24,10 +28,13 @@ void Wallet_CancleOrder(Wallet* wallet, Order* order)
 	{
 		case WALLET_SELL:
 			wallet->ForeignFree += order->Amount;
+			wallet->PendingProfits -= cost;
 			break;
 
 		case WALLET_BUY:
 			wallet->LocalFree += order->Amount * order->Price;
+			wallet->PendingProfits += cost;
+			wallet->TotalCapital -= cost;
 			break;
 	}
 
@@ -36,6 +43,7 @@ void Wallet_CancleOrder(Wallet* wallet, Order* order)
 
 bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price)
 {
+	float cost = amount * price;
 	switch (type)
 	{
 		case WALLET_SELL:
@@ -50,13 +58,14 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 				newOrder->Price  = price;
 
 				wallet->ForeignFree -= amount;
+				wallet->PendingProfits += cost;
 
 				return true;
 			}
 			break;
 
 		case WALLET_BUY:
-			if (wallet->LocalFree > (amount * price))
+			if (wallet->LocalFree > cost)
 			{
 				Order* newOrder = BufferedList_AddEnd(&wallet->Pending);
 				if (!newOrder)
@@ -66,7 +75,9 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 				newOrder->Type   = type;
 				newOrder->Price  = price;
 
-				wallet->LocalFree -= amount * price;
+				wallet->LocalFree -= cost;
+				wallet->PendingProfits -= cost;
+				wallet->TotalCapital += cost;
 
 				return true;
 			}
@@ -91,16 +102,22 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 			case WALLET_SELL:
 				if (currentPrice >= order->Price)
 				{
+					float received = (order->Amount - fee) * order->Price;
 					executed = order;
-					wallet->LocalFree += (order->Amount - fee) * order->Price;
+					wallet->LocalFree += received;
+					wallet->RealizedProfits += received;
+					wallet->PendingProfits -= received;
 				}
 				break;
 
 			case WALLET_BUY:
 				if (currentPrice <= order->Price)
 				{
+					float received = order->Amount - fee;
 					executed = order;
-					wallet->ForeignFree += (order->Amount - fee);
+					wallet->ForeignFree += received;
+					wallet->RealizedProfits -= received * order->Price;
+					wallet->PendingProfits += received * order->Price;
 				}
 				break;
 		}
@@ -138,3 +155,8 @@ float Wallet_GetPendingValue(Wallet* wallet)
 
 	return pendingValue;
 }
+
+float Wallet_RealizedProfit(Wallet* wallet) { return wallet->RealizedProfits; }
+float Wallet_PendingProfit(Wallet* wallet) { return wallet->PendingProfits; }
+float Wallet_TotalCapitalUsed(Wallet* wallet) { return wallet->TotalCapital; }
+float Wallet_Efficiency(Wallet* wallet) { return (wallet->RealizedProfits + wallet->PendingProfits) / wallet->TotalCapital; }
