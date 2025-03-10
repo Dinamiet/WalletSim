@@ -29,6 +29,7 @@ typedef struct _Order_
 } Order;
 
 void   Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength);
+void   Wallet_Reset(Wallet* wallet);
 void   Wallet_SetFees(Wallet* wallet, float fees);
 void   Wallet_AddLocal(Wallet* wallet, float amount);
 void   Wallet_AddForeign(Wallet* wallet, float amount);
