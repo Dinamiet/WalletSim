@@ -55,6 +55,9 @@ void Wallet_CancleOrder(Wallet* wallet, Order* order)
 bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price)
 {
 	float cost = amount * price;
+	if (cost < 0)
+		return false;
+
 	switch (type)
 	{
 		case WALLET_SELL:
