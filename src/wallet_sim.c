@@ -29,7 +29,7 @@ void Wallet_AddLocal(Wallet* wallet, float amount) { wallet->LocalFree += amount
 
 void Wallet_AddForeign(Wallet* wallet, float amount) { wallet->ForeignFree += amount; }
 
-void Wallet_CancleOrder(Wallet* wallet, Order* order)
+void Wallet_CancelOrder(Wallet* wallet, Order* order)
 {
 	float cost = order->Amount * order->Price;
 	if (!order)
