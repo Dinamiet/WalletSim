@@ -28,21 +28,26 @@ typedef struct _Order_
 	float     Amount;
 } Order;
 
-void   Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength);
-void   Wallet_Reset(Wallet* wallet);
-void   Wallet_SetFees(Wallet* wallet, float fees);
-void   Wallet_AddLocal(Wallet* wallet, float amount);
-void   Wallet_AddForeign(Wallet* wallet, float amount);
-void   Wallet_CancelOrder(Wallet* wallet, Order* order);
-bool   Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price);
-void   Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
-Order* Wallet_GetPendingOrders(Wallet* wallet);
-float  Wallet_GetLocalFree(Wallet* wallet);
-float  Wallet_GetForeignFree(Wallet* wallet);
-float  Wallet_GetPendingValue(Wallet* wallet);
-float  Wallet_RealizedProfit(Wallet* wallet);
-float  Wallet_PendingProfit(Wallet* wallet);
-float  Wallet_TotalCapitalUsed(Wallet* wallet);
-float  Wallet_Efficiency(Wallet* wallet);
+typedef struct _Balance_
+{
+	float Local;
+	float Foreign;
+} Balance;
+
+void    Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength);
+void    Wallet_Reset(Wallet* wallet);
+void    Wallet_SetFees(Wallet* wallet, float fees);
+void    Wallet_AddLocal(Wallet* wallet, float amount);
+void    Wallet_AddForeign(Wallet* wallet, float amount);
+void    Wallet_CancelOrder(Wallet* wallet, Order* order);
+bool    Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price);
+void    Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
+Order*  Wallet_GetPendingOrders(Wallet* wallet);
+Balance Wallet_GetBalanceFree(Wallet* wallet);
+Balance Wallet_GetBalancePending(Wallet* wallet);
+float   Wallet_RealizedProfit(Wallet* wallet);
+float   Wallet_PendingProfit(Wallet* wallet);
+float   Wallet_TotalCapitalUsed(Wallet* wallet);
+float   Wallet_Efficiency(Wallet* wallet);
 
 #endif

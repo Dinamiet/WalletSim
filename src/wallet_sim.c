@@ -2,9 +2,9 @@
 
 void Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength)
 {
-	wallet->LocalFree   = 0.0f;
-	wallet->ForeignFree = 0.0f;
-	wallet->Fees        = 0.0f;
+	wallet->LocalFree       = 0.0f;
+	wallet->ForeignFree     = 0.0f;
+	wallet->Fees            = 0.0f;
 	wallet->RealizedProfits = 0.0f;
 	wallet->PendingProfits  = 0.0f;
 	wallet->TotalCapital    = 0.0f;
@@ -117,7 +117,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 				if (currentPrice >= order->Price)
 				{
 					float received = (order->Amount - fee) * order->Price;
-					executed = order;
+					executed       = order;
 					wallet->LocalFree += received;
 					wallet->RealizedProfits += received;
 					wallet->PendingProfits -= received;
@@ -128,7 +128,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 				if (currentPrice <= order->Price)
 				{
 					float received = order->Amount - fee;
-					executed = order;
+					executed       = order;
 					wallet->ForeignFree += received;
 					wallet->RealizedProfits -= received * order->Price;
 					wallet->PendingProfits += received * order->Price;
@@ -144,33 +144,36 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 
 Order* Wallet_GetPendingOrders(Wallet* wallet) { return BufferedList_First(&wallet->Pending); }
 
-float Wallet_GetLocalFree(Wallet* wallet)
+Balance Wallet_GetBalanceFree(Wallet* wallet)
 {
-	return wallet->LocalFree;
+	Balance balance = {.Local = wallet->LocalFree, .Foreign = wallet->ForeignFree};
+	return balance;
 }
 
-float Wallet_GetForeignFree(Wallet* wallet)
+Balance Wallet_GetBalancePending(Wallet* wallet)
 {
-	return wallet->ForeignFree;
-}
+	Balance balance;
+	balance.Local   = 0.0f;
+	balance.Foreign = 0.0f;
 
-float Wallet_GetPendingValue(Wallet* wallet)
-{
-	float  pendingValue = 0.0f;
-	Order* order        = Wallet_GetPendingOrders(wallet);
+	Order* order = Wallet_GetPendingOrders(wallet);
 	if (order)
 	{
 		do {
-			pendingValue += order->Price * order->Amount;
+			balance.Local += order->Price * order->Amount;
+			balance.Foreign += order->Amount;
 
 			order = BufferedList_Next(order);
 		} while (order != Wallet_GetPendingOrders(wallet));
 	}
 
-	return pendingValue;
+	return balance;
 }
 
 float Wallet_RealizedProfit(Wallet* wallet) { return wallet->RealizedProfits; }
+
 float Wallet_PendingProfit(Wallet* wallet) { return wallet->PendingProfits; }
+
 float Wallet_TotalCapitalUsed(Wallet* wallet) { return wallet->TotalCapital; }
+
 float Wallet_Efficiency(Wallet* wallet) { return (wallet->RealizedProfits + wallet->PendingProfits) / wallet->TotalCapital; }
