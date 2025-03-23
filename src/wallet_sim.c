@@ -52,7 +52,7 @@ void Wallet_CancelOrder(Wallet* wallet, Order* order)
 	BufferedList_Remove(&wallet->Pending, order);
 }
 
-bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price)
+bool Wallet_PlaceOrder(Wallet* wallet, time_t time, OrderType type, float amount, float price)
 {
 	float cost = amount * price;
 	if (cost < 0)
@@ -67,6 +67,7 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 				if (!newOrder)
 					return false;
 
+				newOrder->TimePlaced = time;
 				newOrder->Amount = amount;
 				newOrder->Type   = type;
 				newOrder->Price  = price;
@@ -85,6 +86,7 @@ bool Wallet_PlaceOrder(Wallet* wallet, OrderType type, float amount, float price
 				if (!newOrder)
 					return false;
 
+				newOrder->TimePlaced = time;
 				newOrder->Amount = amount;
 				newOrder->Type   = type;
 				newOrder->Price  = price;
