@@ -2,50 +2,42 @@
 
 void Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength)
 {
-	wallet->LocalFree       = 0.0f;
-	wallet->ForeignFree     = 0.0f;
-	wallet->Fees            = 0.0f;
-	wallet->RealizedProfits = 0.0f;
-	wallet->PendingProfits  = 0.0f;
-	wallet->TotalCapital    = 0.0f;
-
 	BufferedList_Init(&wallet->Pending, pendingOrders, sizeof(*pendingOrders), listLength);
+
+	Wallet_Reset(wallet);
 }
 
 void Wallet_Reset(Wallet* wallet)
 {
-	wallet->LocalFree       = 0.0f;
-	wallet->ForeignFree     = 0.0f;
-	wallet->RealizedProfits = 0.0f;
-	wallet->PendingProfits  = 0.0f;
-	wallet->TotalCapital    = 0.0f;
+	wallet->Free.Local        = 0.0f;
+	wallet->Free.Foreign      = 0.0f;
+	wallet->SellTotal.Foreign = 0.0f;
+	wallet->SellTotal.Local   = 0.0f;
+	wallet->BuyTotal.Foreign  = 0.0f;
+	wallet->BuyTotal.Foreign  = 0.0f;
 
 	BufferedList_Clear(&wallet->Pending);
 }
 
-void Wallet_SetFees(Wallet* wallet, float fees) { wallet->Fees = fees; }
+void Wallet_SetFees(Wallet* wallet, float fees) { wallet->Fees = fees / 100.0f; }
 
-void Wallet_AddLocal(Wallet* wallet, float amount) { wallet->LocalFree += amount; }
+void Wallet_AddLocal(Wallet* wallet, float amount) { wallet->Free.Local += amount; }
 
-void Wallet_AddForeign(Wallet* wallet, float amount) { wallet->ForeignFree += amount; }
+void Wallet_AddForeign(Wallet* wallet, float amount) { wallet->Free.Foreign += amount; }
 
 void Wallet_CancelOrder(Wallet* wallet, Order* order)
 {
-	float cost = order->Amount * order->Price;
 	if (!order)
 		return;
 
 	switch (order->Type)
 	{
 		case WALLET_SELL:
-			wallet->ForeignFree += order->Amount;
-			wallet->PendingProfits -= cost;
+			wallet->Free.Foreign += order->Amount;
 			break;
 
 		case WALLET_BUY:
-			wallet->LocalFree += order->Amount * order->Price;
-			wallet->PendingProfits += cost;
-			wallet->TotalCapital -= cost;
+			wallet->Free.Local += order->Amount * order->Price;
 			break;
 	}
 
@@ -61,39 +53,36 @@ bool Wallet_PlaceOrder(Wallet* wallet, time_t time, OrderType type, float amount
 	switch (type)
 	{
 		case WALLET_SELL:
-			if (wallet->ForeignFree > amount)
+			if (wallet->Free.Foreign > amount)
 			{
 				Order* newOrder = BufferedList_AddEnd(&wallet->Pending);
 				if (!newOrder)
 					return false;
 
 				newOrder->TimePlaced = time;
-				newOrder->Amount = amount;
-				newOrder->Type   = type;
-				newOrder->Price  = price;
+				newOrder->Amount     = amount;
+				newOrder->Type       = type;
+				newOrder->Price      = price;
 
-				wallet->ForeignFree -= amount;
-				wallet->PendingProfits += cost;
+				wallet->Free.Foreign -= amount;
 
 				return true;
 			}
 			break;
 
 		case WALLET_BUY:
-			if (wallet->LocalFree > cost)
+			if (wallet->Free.Local > cost)
 			{
 				Order* newOrder = BufferedList_AddEnd(&wallet->Pending);
 				if (!newOrder)
 					return false;
 
 				newOrder->TimePlaced = time;
-				newOrder->Amount = amount;
-				newOrder->Type   = type;
-				newOrder->Price  = price;
+				newOrder->Amount     = amount;
+				newOrder->Type       = type;
+				newOrder->Price      = price;
 
-				wallet->LocalFree -= cost;
-				wallet->PendingProfits -= cost;
-				wallet->TotalCapital += cost;
+				wallet->Free.Local -= cost;
 
 				return true;
 			}
@@ -112,7 +101,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 	while (!allChecked && order)
 	{
 		Order* executed = NULL;
-		float  fee      = order->Amount * (wallet->Fees / 100.0f);
+		float  fee      = order->Amount * wallet->Fees;
 		switch (order->Type)
 		{
 			case WALLET_SELL:
@@ -120,9 +109,9 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 				{
 					float received = (order->Amount - fee) * order->Price;
 					executed       = order;
-					wallet->LocalFree += received;
-					wallet->RealizedProfits += received;
-					wallet->PendingProfits -= received;
+					wallet->Free.Local += received;
+					wallet->SellTotal.Local += received;
+					wallet->SellTotal.Foreign += order->Amount - fee;
 				}
 				break;
 
@@ -131,9 +120,9 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 				{
 					float received = order->Amount - fee;
 					executed       = order;
-					wallet->ForeignFree += received;
-					wallet->RealizedProfits -= received * order->Price;
-					wallet->PendingProfits += received * order->Price;
+					wallet->Free.Foreign += received;
+					wallet->BuyTotal.Local += received * order->Price;
+					wallet->BuyTotal.Foreign += received;
 				}
 				break;
 		}
@@ -146,11 +135,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 
 Order* Wallet_GetPendingOrders(Wallet* wallet) { return BufferedList_First(&wallet->Pending); }
 
-Balance Wallet_GetBalanceFree(Wallet* wallet)
-{
-	Balance balance = {.Local = wallet->LocalFree, .Foreign = wallet->ForeignFree};
-	return balance;
-}
+Balance Wallet_GetBalanceFree(Wallet* wallet) { return wallet->Free; }
 
 Balance Wallet_GetBalancePending(Wallet* wallet)
 {
@@ -172,10 +157,22 @@ Balance Wallet_GetBalancePending(Wallet* wallet)
 	return balance;
 }
 
-float Wallet_RealizedProfit(Wallet* wallet) { return wallet->RealizedProfits; }
+Balance Wallet_TotalSells(Wallet* wallet) { return wallet->SellTotal; }
 
-float Wallet_PendingProfit(Wallet* wallet) { return wallet->PendingProfits; }
+Balance Wallet_TotalBuys(Wallet* wallet) { return wallet->BuyTotal; }
 
-float Wallet_TotalCapitalUsed(Wallet* wallet) { return wallet->TotalCapital; }
+void Wallet_Cashout(Wallet* wallet, float price)
+{
+	Order* order = BufferedList_First(&wallet->Pending);
 
-float Wallet_Efficiency(Wallet* wallet) { return (wallet->RealizedProfits + wallet->PendingProfits) / wallet->TotalCapital; }
+	while (order)
+	{
+		Wallet_CancelOrder(wallet, order);
+		order = BufferedList_First(&wallet->Pending);
+	}
+
+	float received = wallet->Free.Foreign * (1.0f - wallet->Fees) * price;
+	wallet->Free.Local += received;
+	wallet->SellTotal.Local   = received;
+	wallet->SellTotal.Foreign = wallet->Free.Foreign * (1.0f - wallet->Fees);
+}

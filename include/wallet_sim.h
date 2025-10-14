@@ -5,15 +5,19 @@
 
 #include <time.h>
 
+typedef struct _Balance_
+{
+	float Local;
+	float Foreign;
+} Balance;
+
 typedef struct _Wallet_
 {
-	float        LocalFree;
-	float        ForeignFree;
+	Balance      Free;
+	Balance      BuyTotal;
+	Balance      SellTotal;
 	float        Fees;
 	BufferedList Pending;
-	float        RealizedProfits;
-	float        PendingProfits;
-	float        TotalCapital;
 } Wallet;
 
 typedef enum _OrderType_
@@ -31,12 +35,6 @@ typedef struct _Order_
 	float     Amount;
 } Order;
 
-typedef struct _Balance_
-{
-	float Local;
-	float Foreign;
-} Balance;
-
 void    Wallet_Init(Wallet* wallet, Order* pendingOrders, size_t listLength);
 void    Wallet_Reset(Wallet* wallet);
 void    Wallet_SetFees(Wallet* wallet, float fees);
@@ -48,9 +46,8 @@ void    Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
 Order*  Wallet_GetPendingOrders(Wallet* wallet);
 Balance Wallet_GetBalanceFree(Wallet* wallet);
 Balance Wallet_GetBalancePending(Wallet* wallet);
-float   Wallet_RealizedProfit(Wallet* wallet);
-float   Wallet_PendingProfit(Wallet* wallet);
-float   Wallet_TotalCapitalUsed(Wallet* wallet);
-float   Wallet_Efficiency(Wallet* wallet);
+Balance Wallet_TotalSells(Wallet* wallet);
+Balance Wallet_TotalBuys(Wallet* wallet);
+void    Wallet_Cashout(Wallet* wallet, float price);
 
 #endif
