@@ -42,7 +42,7 @@ void    Wallet_AddLocal(Wallet* wallet, float amount);
 void    Wallet_AddForeign(Wallet* wallet, float amount);
 void    Wallet_CancelOrder(Wallet* wallet, Order* order);
 bool    Wallet_PlaceOrder(Wallet* wallet, time_t time, OrderType type, float amount, float price);
-void    Wallet_ExecuteOrders(Wallet* wallet, float currentPrice);
+void    Wallet_ExecuteOrders(Wallet* wallet, float low, float high);
 Order*  Wallet_GetPendingOrders(Wallet* wallet);
 Balance Wallet_GetBalanceFree(Wallet* wallet);
 Balance Wallet_GetBalancePending(Wallet* wallet);

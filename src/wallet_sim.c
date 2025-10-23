@@ -92,7 +92,7 @@ bool Wallet_PlaceOrder(Wallet* wallet, time_t time, OrderType type, float amount
 	return false;
 }
 
-void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
+void Wallet_ExecuteOrders(Wallet* wallet, float low, float high)
 {
 	Order* order      = BufferedList_First(&wallet->Pending);
 	Order* lastOrder  = BufferedList_Last(&wallet->Pending);
@@ -105,7 +105,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 		switch (order->Type)
 		{
 			case WALLET_SELL:
-				if (currentPrice >= order->Price)
+				if (order->Price <= high)
 				{
 					float received = (order->Amount - fee) * order->Price;
 					executed       = order;
@@ -116,7 +116,7 @@ void Wallet_ExecuteOrders(Wallet* wallet, float currentPrice)
 				break;
 
 			case WALLET_BUY:
-				if (currentPrice <= order->Price)
+				if (order->Price >= low)
 				{
 					float received = order->Amount - fee;
 					executed       = order;
@@ -146,7 +146,8 @@ Balance Wallet_GetBalancePending(Wallet* wallet)
 	Order* order = Wallet_GetPendingOrders(wallet);
 	if (order)
 	{
-		do {
+		do
+		{
 			balance.Local += order->Price * order->Amount;
 			balance.Foreign += order->Amount;
 
